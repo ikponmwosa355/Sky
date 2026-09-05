@@ -857,24 +857,9 @@ Your friends appear here first. Tap any friend to open the chat.
     
 let posts=JSON.parse(localStorage.getItem("skyPosts")||"[]");    
     
-let friends=JSON.parse(localStorage.getItem("skyFriends")||"[]");    
-    
-if(!friends.length){    
- friends=[    
-  {name:"Chiamaka",phone:"08010000001",online:true,avatar:"👩"},    
-  {name:"Joshua",phone:"08010000002",online:true,avatar:"👨"},    
-  {name:"Grace",phone:"08010000003",online:false,avatar:"👩"},    
-  {name:"Patrick",phone:"08010000004",online:true,avatar:"👨"},    
-  {name:"Favour",phone:"08010000005",online:false,avatar:"👩"},    
-  {name:"Nosa",phone:"08010000006",online:true,avatar:"👨"},    
-  {name:"Osas",phone:"08010000007",online:false,avatar:"👨"},    
-  {name:"Emmanuel",phone:"08010000008",online:true,avatar:"👨"}    
- ];    
-    
- localStorage.setItem("skyFriends",JSON.stringify(friends));    
-}    
-    
-let friendRequests=JSON.parse(localStorage.getItem("skyFriendRequests")||"[]");    
+let friends = []; // loaded from Firebase
+   
+let friendRequests = []; // loaded from Firebase
 let blockedUsers=JSON.parse(localStorage.getItem("skyBlocked")||"[]");    
 let reports=JSON.parse(localStorage.getItem("skyReports")||"[]");    
 let groups=JSON.parse(localStorage.getItem("skyGroups")||"[]");    
@@ -897,7 +882,29 @@ let recordedChunks=[];
     
 const ADMIN_NAME="Fire Power";    
 let currentUser=localStorage.getItem("skyCurrentUser")||"Fire Power";    
-    
+   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db = getFirestore();
+
+async function loadFriends() {
+  const user = auth.currentUser;
+  if(!user) return;
+  const userDoc = await getDoc(doc(db, "skyUsers", user.uid));
+  if(!userDoc.exists()) return;
+  const friendUIDs = userDoc.data().friends || [];
+  friends = []; 
+  for(const uid of friendUIDs){
+    const fDoc = await getDoc(doc(db, "skyUsers", uid));
+    if(fDoc.exists()){
+      friends.push({
+        uid: uid,
+        name: fDoc.data().firstName + " " + fDoc.data().lastName,
+        online: true,
+        avatar: "👤"
+      });
+    }
+  }
+  renderFriends(); 
+} 
 /* ================= PAGE NAVIGATION ================= */    
     
 function showPage(id){    
@@ -913,6 +920,7 @@ function showPage(id){
  if(id==="calls")renderCallFriends();    
     
  if(id==="profile"){    
+ loadFriends();
   renderFriends();    
   renderFriendRequests();    
  }    
