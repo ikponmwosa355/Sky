@@ -770,7 +770,22 @@ onkeydown="if(event.key==='Enter'){event.preventDefault();askAI()}">
 <div id="adminPostList"></div>    
 </div>    <button class="btn gray" onclick="showPage('home')">← Back</button>
 
-</section>    </main>    <!-- BOTTOM NAV -->   
+</section>  
+<!-- SETTINGS PAGE -->
+<section id="settings" class="page" style="display:none; padding:20px;">
+  <h2>⚙️ Settings</h2>
+  <div style="background:#1a1a1a; padding:15px; border-radius:10px; margin-top:15px;">
+    <p><b>Account:</b> <span id="settingsEmail">Loading...</span></p>
+    <p><b>Theme:</b> Dark Mode</p>
+    <p><b>Notifications:</b> On</p>
+    <p><b>App Version:</b> 1.0.0</p>
+  </div>
+  <br>
+  <button class="btn gray" onclick="alert('Coming Soon')">Change Password</button>
+  <button class="btn" style="background:red;" onclick="logout()">Logout</button>
+</section>
+  </main>  
+  <!-- BOTTOM NAV -->   
  <nav class="bottom">
   <button onclick="showPage('home')"><b>🏠</b><br>Home</button>
   <button onclick="showPage('chat')"><b>💬</b><br>Chat</button>
@@ -960,7 +975,7 @@ function showPage(id){
  if(id==="videos")renderVideoFeed();    
     
  if(id==="groups")renderGroups();    
-    
+ if(id==="settings")loadProfile();
  if(id==="admin"){    
   if(currentUser!==ADMIN_NAME){    
    alert("Only the administrator can access this panel.");    
@@ -4774,6 +4789,23 @@ function googleSignIn(){
     document.getElementById("mainApp").style.display = "block";
   })
  .catch((error) => alert(error.message));
+}
+function loadProfile() {
+  const user = auth.currentUser;
+  if(user){
+    db.collection("skyUsers").doc(user.uid).get().then(doc => {
+      if(doc.exists){
+        let data = doc.data();
+        document.getElementById("settingsEmail").innerText = data.email;
+      }
+    }).catch(err => console.log(err));
+  }
+}
+
+function logout() { 
+  auth.signOut().then(() => {
+    showPage('home');
+  }); 
 }
 </script>
  </body>    
