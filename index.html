@@ -436,6 +436,9 @@ body.dark .online-reminder{
  .contact-box{grid-template-columns:1fr}    
 }    
 </style>  
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   </head>  
   <body>    
 
@@ -487,25 +490,6 @@ body.dark .online-reminder{
     <button class="icon" onclick="showPage('notifications')">🔔</button>    
     <button class="icon" onclick="showPage('profile')">👤</button>    
   </header> 
-<div id="signupForm" class="card">  <h2>🚀 Create your Sky account</h2>  <input id="firstName" type="text" placeholder="First name">  <input id="lastName" type="text" placeholder="Last name"><label>Date of birth</label>
-<input id="dob" type="date">
-
-  <select id="gender">
-    <option value="">Select gender</option>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
-    <option value="Other">Other</option>
-  </select>  <input id="email" type="email" placeholder="Gmail / Email"><input
-id="password"
-type="password"
-placeholder="Password (minimum 6 characters)">
-
-  <button class="btn" type="button" onclick="createSkyAccount()">
-    🚀 Create Account
-  </button>  <button class="btn" type="button" onclick="googleSignIn()">
-    🔵 Continue with Google
-  </button>  <p id="signupMessage"></p></div>
-  <header>    
 <div class="logo">⭐ Sky</div>    
 <div class="search">    
 <input id="search" placeholder="Search people, posts, groups..." oninput="searchUsers()">    
@@ -4667,5 +4651,84 @@ function googleSignIn() { alert("Google signup not connected yet"); }
 function skyForgotPassword() { alert("Password reset not connected yet"); }
 
 </script>   
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4rBmei6dx51j7mxitmVbMtBYdfOVVlsw",
+  authDomain: "david-e9185.firebaseapp.com",
+  projectId: "david-e9185",
+  storageBucket: "david-e9185.firebasestorage.app",
+  messagingSenderId: "479556854966",
+  appId: "1:479556854966:web:6576ca58aaf2640ac63217"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// CREATE ACCOUNT
+function createSkyAccount() {
+  const firstName = document.getElementById("firstName").value;
+  const lastName = document.getElementById("lastName").value;
+  const dob = document.getElementById("dob").value;
+  const gender = document.getElementById("gender").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("signupMessage");
+
+  if(password.length < 6){
+    msg.innerText = "Password must be at least 6 characters";
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(email, password)
+ .then((cred) => {
+    return db.collection("skyUsers").doc(cred.user.uid).set({
+      firstName: firstName,
+      lastName: lastName,
+      dob: dob,
+      gender: gender,
+      email: email,
+      createdAt: new Date()
+    })
+  })
+ .then(() => {
+    msg.innerText = "Account Created! Welcome to Sky 🚀";
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+  })
+ .catch((error) => msg.innerText = error.message);
+}
+
+// LOGIN
+function skyLogin() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const msg = document.getElementById("loginMessage");
+
+  auth.signInWithEmailAndPassword(email, password)
+ .then(() => {
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+  })
+ .catch((error) => msg.innerText = error.message);
+}
+
+// GOOGLE SIGN IN
+function googleSignIn(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+ .then((result) => {
+    const user = result.user;
+    db.collection("skyUsers").doc(user.uid).set({
+      firstName: user.displayName.split(" ")[0],
+      lastName: user.displayName.split(" ")[1] || "",
+      email: user.email,
+      createdAt: new Date()
+    }, {merge: true})
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+  })
+ .catch((error) => alert(error.message));
+}
+</script>
  </body>    
 </html>
