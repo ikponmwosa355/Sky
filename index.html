@@ -435,6 +435,33 @@ body.dark .online-reminder{
 @media(max-width:600px){    
  .contact-box{grid-template-columns:1fr}    
 }    
+nav.bottom {
+  position: fixed; 
+  bottom: 0; 
+  left: 0; 
+  right: 0;
+  display: flex; 
+  justify-content: space-around;
+  background: #111; 
+  padding: 8px 0;
+  border-top: 1px solid #333; 
+  z-index: 999;
+}
+nav.bottom button {
+  background: none; 
+  border: none; 
+  color: #aaa;
+  font-size: 11px; 
+  cursor: pointer; 
+  text-align: center;
+}
+nav.bottom button b { 
+  font-size: 22px; 
+  display: block; 
+}
+nav.bottom button:hover { 
+  color: white; 
+}
 </style>  
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -743,15 +770,20 @@ onkeydown="if(event.key==='Enter'){event.preventDefault();askAI()}">
 <div id="adminPostList"></div>    
 </div>    <button class="btn gray" onclick="showPage('home')">← Back</button>
 
-</section>    </main>    <!-- BOTTOM NAV -->    <nav class="bottom">    
-<button onclick="showPage('home')"><b>🏠</b>Home</button>    
-<button onclick="openChatPicker()"><b>💬</b>Chat</button>    
-<button onclick="showPage('calls')"><b>📞</b>Calls</button>    
-<button onclick="showPage('videos')"><b>🎬</b>Videos</button>    
-<button onclick="showPage('games')"><b>🎮</b>Games</button>    
-<button onclick="showPage('profile')"><b>👤</b>Profile</button>    
-<button onclick="showPage('settings')"><b>⚙️</b>Settings</button>    
-</nav>    <!-- FRIEND PICKER -->    <div class="friend-picker" id="friendPicker">    <div class="friend-picker-header">    <!-- UPDATED: THIS BUTTON NOW GOES DIRECTLY TO HOME -->    <button class="btn gray" onclick="goHomeFromFriendPicker()">←</button>
+</section>    </main>    <!-- BOTTOM NAV -->   
+ <nav class="bottom">
+  <button onclick="showPage('home')"><b>🏠</b><br>Home</button>
+  <button onclick="showPage('chat')"><b>💬</b><br>Chat</button>
+  <button onclick="showPage('calls')"><b>📞</b><br>Calls</button>
+  <button onclick="showPage('videos')"><b>🎬</b><br>Videos</button>
+  <button onclick="showPage('games')"><b>🎮</b><br>Games</button>
+  <button onclick="showPage('profile')"><b>👤</b><br>Profile</button>
+  <button onclick="showPage('settings')"><b>⚙️</b><br>Settings</button>
+</nav>
+  <!-- FRIEND PICKER -->  
+  <div class="friend-picker" id="friendPicker">    <div class="friend-picker-header">  
+  <!-- UPDATED: THIS BUTTON NOW GOES DIRECTLY TO HOME --> 
+   <button class="btn gray" onclick="goHomeFromFriendPicker()">←</button>
 
 <h2>👥 Choose a Friend</h2>    </div>    <div class="friend-picker-search">    
 <input id="friendPickerSearch"    
@@ -4276,10 +4308,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);    
     
 const db = getFirestore(app);    
-/* =========================    
+=========================    
    SKY FIREBASE AUTH CHECK    
 ========================= */    
-    onAuthStateChanged(auth, function(user) {
+onAuthStateChanged(auth, async function(user) {
 
   const authScreen = document.getElementById("authScreen");
   const skyApp = document.getElementById("skyApp");
@@ -4291,12 +4323,18 @@ const db = getFirestore(app);
 
   if (user) {
 
+    currentUser = user; // <-- IMPORTANT: save user
     authScreen.style.display = "none";
     skyApp.style.display = "block";
 
     if (typeof showPage === "function") {
       showPage("home");
     }
+
+    // ADD THESE 3 LINES - THIS LOADS FRIENDS
+    await loadFriends();
+    renderFriends();
+    renderFriendRequests();
 
   } else {
 
