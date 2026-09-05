@@ -435,40 +435,15 @@ body.dark .online-reminder{
 @media(max-width:600px){    
  .contact-box{grid-template-columns:1fr}    
 }    
-</style>    </head>    <body>    <!-- SKY LOGIN -->    <div id="loginForm" class="card">     
- <h2>🔐 Sign in to Sky</h2>    <input    
-id="loginEmail"    
-type="email"    
-placeholder="Gmail / Email">
+</style>  
+  </head>  
+  <body>    
 
-<input    
-id="loginPassword"    
-type="password"    
-placeholder="Password">
-
-<button
-  class="btn"
-  type="button"
-  onclick="skyLogin()">
-  🔐 Sign In
-</button>
-
-<button
-  class="btn"
-  type="button"
-  onclick="skyForgotPassword()">
-  🔑 Forgot Password?
-</button>
-
-<button
-  class="btn gray"
-  type="button"
-  onclick="skyGoogleLogin()">
   🔵 Continue with Google
 </button>
   <p id="loginMessage"></p>    </div> 
 <!-- SKY SIGN UP -->
-  <<div id="authScreen">  <!-- START WRAPPER -->
+  <div id="authScreen"> <!-- START WRAPPER -->
 
   <!-- 1. LOGIN FORM -->
   <div id="loginForm" class="card">
@@ -4391,8 +4366,9 @@ window.skyLogin = async function () {
 
     // SWITCH TO HOME AFTER 1 SECOND
     setTimeout(() => {
-      document.getElementById("authScreen").style.display = "none";
-      document.getElementById("mainApp").style.display = "block";
+     if(document.getElementById("authScreen")) document.getElementById("authScreen").style.display = "none";
+if(document.getElementById("skyApp")) document.getElementById("skyApp").style.display = "block";
+if(typeof showPage === "function") showPage('home');
     }, 1000);
 
   } catch (error) {
@@ -4454,13 +4430,16 @@ window.skyGoogleLogin = async function () {
     message.textContent =    
       "Google sign-in successful! 🚀";    
     
-    document.getElementById("loginForm").style.display = "none";    
-document.getElementById("signupForm").style.display = "none";    
+  if (document.getElementById("authScreen")) document.getElementById("authScreen").style.display = "none"; 
+if (document.getElementById("skyApp")) document.getElementById("skyApp").style.display = "block";
+
 
 setTimeout(() => {
-  document.getElementById("skyApp").style.display = "block";
+    if (typeof showPage === "function") showPage('home');
+
 }, 1000);
   } catch (error) {    
+  
     
     console.error(error);    
     
@@ -4603,6 +4582,90 @@ window.googleSignIn = async function () {
     alert(error.message);
   }
 };
+
+/* ================= LOGIN + SIGNUP ================= */
+let skyUsers = JSON.parse(localStorage.getItem("skyUsers") || "[]");
+
+// LOGIN FUNCTION
+function skyLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const msg = document.getElementById("loginMessage");
+
+  if(!email || !password) {
+    msg.innerText = "❌ Please enter email and password";
+    msg.style.color = "red";
+    return;
+  }
+
+  const user = skyUsers.find(u => u.email === email && u.password === password);
+
+  if(user) {
+    msg.innerText = "✅ Login successful!";
+    msg.style.color = "green";
+    localStorage.setItem("skyCurrentUser", user.name);
+    setTimeout(() => {
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("authScreen").style.display = "none";
+      document.getElementById("mainApp").style.display = "block";
+      showPage("home");
+      loadProfile();
+      renderFeed();
+    }, 800);
+  } else {
+    msg.innerText = "❌ Wrong email or password";
+    msg.style.color = "red";
+  }
+}
+
+// SIGNUP FUNCTION  
+function createSkyAccount() {
+  const firstName = document.getElementById("firstName").value.trim();
+  const lastName = document.getElementById("lastName").value.trim();
+  const dob = document.getElementById("dob").value;
+  const gender = document.getElementById("gender").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("signupMessage");
+
+  if(!firstName || !lastName || !dob || !gender || !email || !password) {
+    msg.innerText = "❌ Please fill all fields";
+    msg.style.color = "red";
+    return;
+  }
+  
+  if(password.length < 6) {
+    msg.innerText = "❌ Password must be at least 6 characters";
+    msg.style.color = "red";
+    return;
+  }
+
+  const exists = skyUsers.find(u => u.email === email);
+  if(exists) {
+    msg.innerText = "❌ This email already has an account";
+    msg.style.color = "red";
+    return;
+  }
+
+  skyUsers.push({name: firstName + " " + lastName, email, password, dob, gender});
+  localStorage.setItem("skyUsers", JSON.stringify(skyUsers));
+
+  msg.innerText = "✅ Account created! You can login now.";
+  msg.style.color = "green";
+  
+  document.getElementById("firstName").value = "";
+  document.getElementById("lastName").value = "";
+  document.getElementById("dob").value = "";
+  document.getElementById("gender").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+}
+
+// PLACEHOLDERS
+function skyGoogleLogin() { alert("Google login not connected yet"); }
+function googleSignIn() { alert("Google signup not connected yet"); }
+function skyForgotPassword() { alert("Password reset not connected yet"); }
+
 </script>   
  </body>    
 </html>
