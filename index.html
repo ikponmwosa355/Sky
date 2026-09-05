@@ -580,6 +580,11 @@ nav.bottom button:hover {
 <div class="profile-info">    
 <div class="avatar" id="profileAvatar">FP</div>    
 <h2 id="profileName">Fire Power <span class="badge">✓</span></h2>    
+<h2 id="profileName">Fire Power <span class...
+<p id="profileBio"></p>
+<div id="adminPanel" style="display:none; background:red; color:white; padding:10px; border-radius:8px; margin-top:10px; text-align:center; font-weight:bold;">
+  ADMIN PANEL
+</div>
 <p>@firepower</p>    
 <p>⭐ Sky • Creator</p>    
 <button class="btn" onclick="editProfile()">Edit Profile</button>    
@@ -1007,45 +1012,51 @@ function escapeHTML(str){
     
 /* ================= PROFILE ================= */    
     
-function loadProfile(){    
-    
- const avatar=localStorage.getItem("skyAvatar");    
- const cover=localStorage.getItem("skyCover");    
-    
- const savedName=localStorage.getItem("skyProfileName");    
-    
- if(savedName){    
-  document.getElementById("profileName").innerHTML=    
-  escapeHTML(savedName)+' <span class="badge">✓</span>';    
-    
-  document.getElementById("homeName").innerHTML=    
-  escapeHTML(savedName)+' <span class="badge">✓</span>';    
- }    
-    
- if(avatar){    
-    
-  ["profileAvatar","homeAvatar"].forEach(id=>{    
-    
-   let e=document.getElementById(id);    
-    
-   e.style.backgroundImage=`url("${avatar}")`;    
-    
-   e.textContent="";    
-    
-  });    
- }    
-    
- if(cover){    
-    
-  ["profileCover","homeCover"].forEach(id=>{    
-    
-   document.getElementById(id).style.backgroundImage=    
-   `url("${cover}")`;    
-    
-  });    
-    
- }    
-}    
+function loadProfile(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
+
+  const uid = user.uid;
+  
+  // Load from Firestore instead of localStorage
+  firebase.firestore().collection("skyUsers").doc(uid).onSnapshot((doc)=>{
+    if(doc.exists){
+      const data = doc.data();
+      
+      // Name
+      const name = data.name || "No Name";
+      document.getElementById("profileName").innerHTML = escapeHTML(name) + ' <span class="badge">✓</span>';
+      document.getElementById("homeName").innerHTML = escapeHTML(name) + ' <span class="badge">✓</span>';
+      
+      // Bio - add this if you have a bio element
+      if(document.getElementById("profileBio")){
+        document.getElementById("profileBio").innerText = data.bio || "";
+      }
+
+      // Admin Panel
+      if(data.isAdmin == true){
+        document.getElementById("adminPanel").style.display = "block";
+      }
+    }
+  });
+
+  // Keep your old avatar/cover from localStorage for now
+  const avatar=localStorage.getItem("skyAvatar");
+  const cover=localStorage.getItem("skyCover");
+
+  if(avatar){
+    ["profileAvatar","homeAvatar"].forEach(id=>{
+      let e=document.getElementById(id);
+      if(e) e.style.backgroundImage=`url("${avatar}")`;
+      e.textContent="";
+    });
+  }
+  if(cover){
+    ["profileCover","homeCover"].forEach(id=>{
+      document.getElementById(id).style.backgroundImage=`url("${cover}")`;
+    });
+  }
+}
     
 function changeProfilePhoto(e){    
     
@@ -1091,25 +1102,25 @@ function changeCoverPhoto(e){
  r.readAsDataURL(file);    
 }    
     
-function editProfile(){    
-    
- const old=    
- localStorage.getItem("skyProfileName")||    
- document.getElementById("profileName").textContent.replace(" ✓","");    
-    
- const name=prompt("Enter your new profile name:",old);    
-    
- if(name){    
-    
-  localStorage.setItem("skyProfileName",name);    
-    
-  document.getElementById("profileName").innerHTML=    
-  escapeHTML(name)+' <span class="badge">✓</span>';    
-    
-  document.getElementById("homeName").innerHTML=    
-  escapeHTML(name)+' <span class="badge">✓</span>';    
- }    
-}    
+function editProfile(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
+
+  const old = document.getElementById("profileName").innerText.replace(' ✓','');
+  const name = prompt("Enter your new profile name:", old);
+  
+  if(name){
+    // Save to Firestore instead of localStorage
+    firebase.firestore().collection("skyUsers").doc(user.uid).update({
+      name: name
+    }).then(()=>{
+      document.getElementById("profileName").innerHTML = escapeHTML(name)+' <span class="badge">✓</span>';
+      document.getElementById("homeName").innerHTML = escapeHTML(name)+' <span class="badge">✓</span>';
+    }).catch(err=>{
+      alert("Error: " + err.message)
+    });
+  }
+}
     
 function verify(){    
  alert("Verification options:\n\n🔵 Creator\n🟡 Business\n🛡️ Official");    
