@@ -2,7 +2,11 @@
 <head>    
 <meta charset="UTF-8">    
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">    
-<title>Sky Social Network</title>    <style>    
+<title>Sky Social Network</title>   
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+ <style>    
 *{box-sizing:border-box;margin:0;padding:0}    
 :root{    
  --yellow:#ffd83d;    
@@ -580,7 +584,6 @@ nav.bottom button:hover {
 <div class="profile-info">    
 <div class="avatar" id="profileAvatar">FP</div>    
 <h2 id="profileName">Fire Power <span class="badge">✓</span></h2>    
-<h2 id="profileName">Fire Power <span class...
 <p id="profileBio"></p>
 <div id="adminPanel" style="display:none; background:red; color:white; padding:10px; border-radius:8px; margin-top:10px; text-align:center; font-weight:bold;">
   ADMIN PANEL
@@ -4791,22 +4794,37 @@ function googleSignIn(){
  .then((result) => {
     const user = result.user;
     db.collection("skyUsers").doc(user.uid).set({
-      firstName: user.displayName.split(" ")[0],
-      lastName: user.displayName.split(" ")[1] || "",
-      email: user.email,
-      createdAt: new Date()
-    }, {merge: true})
+  firstName: user.displayName.split(" ")[0],
+  lastName: user.displayName.split(" ")[1] || "",
+  email: user.email,
+  bio: data.bio || "Admin of sky", // add this
+  isAdmin: data.isAdmin || false, // add this
+  createdAt: new Date()
+}, {merge: true})
     document.getElementById("authScreen").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
   })
  .catch((error) => alert(error.message));
 }
-function loadProfile() {
+function loadProfile(){
   const user = auth.currentUser;
   if(user){
-    db.collection("skyUsers").doc(user.uid).get().then(doc => {
+    db.collection("skyUsers").doc(user.uid).get()
+   .then((doc)=>{
       if(doc.exists){
         let data = doc.data();
+        
+        // 1. Load Name + Bio
+        const fullName = (data.firstName || "") + " + (data.lastName || "");
+        document.getElementById("profileName").innerHTML = escapeHTML(fullName) + ' <span class="badge">✓</span>';
+        document.getElementById("profileBio").innerText = data.bio || "Admin of sky"; // reads from Firebase
+        
+        // 2. Show Admin Panel if true
+        if(data.isAdmin == true){
+          document.getElementById("adminPanel").style.display = "block";
+        }
+        
+        // 3. Keep your other stuff
         document.getElementById("settingsEmail").innerText = data.email;
       }
     }).catch(err => console.log(err));
