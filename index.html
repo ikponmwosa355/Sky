@@ -236,7 +236,8 @@ body.dark .chat-tools{background:#1f1f1f}
 }
 .chat-input{
  flex-shrink:0;display:flex;gap:5px;padding:7px;background:#fff;
- padding-bottom:calc(7px + env(safe-area-inset-bottom))
+ padding-bottom:calc(7px + env(safe-area-inset-bottom));
+ position:sticky;bottom:0;z-index:5;
 }
 body.dark .chat-input{background:#1f1f1f}
 .chat-input input{
@@ -785,7 +786,7 @@ nav.bottom button:hover {
     <!-- GROUPS -->
     <section id="groups" class="page">
       <div class="card">
-        <h2>👥 Communities & Groups</h2><br>
+        <h2>?? Communities & Groups</h2><br>
         <button class="btn" onclick="createGroup()">➕ Create Group</button>
         <button class="btn gray" onclick="showPage('home')">← Back</button>
       </div>
