@@ -175,13 +175,13 @@ input,select{
  padding:10px;border:1px solid #ddd;border-radius:8px;width:100%;margin:4px 0
 }
 textarea{font-size:14px}
-
 /* CHAT */
 .chat-layout{
  display:grid;
  grid-template-columns:270px minmax(0,1fr);
  gap:10px;
- height:calc(100vh - 155px);
+ /* CHANGED: 100vh to 100dvh so it adjusts when the keyboard opens */
+ height:calc(100dvh - 155px); 
  min-height:500px
 }
 .friends-panel{overflow:auto}
@@ -2887,5 +2887,26 @@ async function loadFriendsFromFirestore(){
 window.loadFriends = loadFriendsFromFirestore;
 </script>
 <script type="module" src="sky-friends.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatInput = document.querySelector('.chat-input input');
+    const messagesContainer = document.querySelector('.messages');
+
+    if (chatInput && messagesContainer) {
+      chatInput.addEventListener('focus', () => {
+        setTimeout(() => {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          chatInput.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 300);
+      });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+      }
+    }
+  });
+</script>
 </body>
 </html>
